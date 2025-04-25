@@ -13,30 +13,42 @@ public class TollCalculator
      * @return - the total toll fee for that day
      */
 
-    public int GetTollFee(Vehicle vehicle, DateTime[] dates)
+      public int GetTollFee(Vehicle vehicle, DateTime[] dates)
     {
-        DateTime intervalStart = dates[0];
+        if (vehicle == null || dates == null || dates.Length == 0)
+            return 0;  
+
+        Array.Sort(dates); 
+
+        DateTime intervalStart = dates[0]; 
         int totalFee = 0;
-        foreach (DateTime date in dates)
+        int tempFee = GetTollFee(intervalStart, vehicle);  
+
+        for (int i = 1; i < dates.Length; i++)
         {
+            DateTime date = dates[i];
             int nextFee = GetTollFee(date, vehicle);
-            int tempFee = GetTollFee(intervalStart, vehicle);
 
-            long diffInMillies = date.Millisecond - intervalStart.Millisecond;
-            long minutes = diffInMillies/1000/60;
-
-            if (minutes <= 60)
+            TimeSpan diff = date - intervalStart;
+            if (diff.TotalMinutes <= 60)
             {
-                if (totalFee > 0) totalFee -= tempFee;
-                if (nextFee >= tempFee) tempFee = nextFee;
-                totalFee += tempFee;
+                
+                if (nextFee > tempFee)
+                    tempFee = nextFee;
             }
             else
             {
-                totalFee += nextFee;
+              
+                totalFee += tempFee;
+                intervalStart = date;
+                tempFee = nextFee;
             }
         }
-        if (totalFee > 60) totalFee = 60;
+
+        totalFee += tempFee;
+        if (totalFee > 60)
+            totalFee = 60;
+
         return totalFee;
     }
 
